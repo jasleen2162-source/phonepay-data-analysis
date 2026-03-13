@@ -212,57 +212,110 @@ def show():
 
     st.markdown("---")
 
-    # -----------------------------
+    # ---------------------------------------------------
     # STATE & DISTRICT ANALYSIS
-    # -----------------------------
+    # ---------------------------------------------------
 
     path = "./pulse/data/map/transaction/hover/country/india/state/"
     state_list = sorted(os.listdir(path))
 
     col_state, col_district = st.columns(2)
 
+    # ===================================================
+    # STATE ANALYSIS
+    # ===================================================
+
     with col_state:
 
-        st.subheader("State Analysis")
+        st.subheader("📍 State Analysis")
 
-        selected_state = st.selectbox("Select State", state_list)
+        
+        
+        
+        
+        
 
-        table, column = metric_table_map[metric_choice]
+        # -----------------------------
+        # STATE METRIC SELECTOR
+        # -----------------------------
+        state_metric_map = {
+            "Transaction Value": ("fact_map_transaction", "transaction_amount"),
+            "Transaction Count": ("fact_map_transaction", "transaction_count"),
+            "Registered Users": ("fact_map_user", "registered_users"),
+            "Insurance Count": ("fact_map_insurance", "insurance_count"),
+        }
 
+        state_metric_option = st.radio(
+            "Select State Metric",
+            (
+                "Transaction Value",
+                "Transaction Count",
+                "Registered Users",
+                "Insurance Count",
+            ),
+            horizontal=True,
+            key="state_metric",
+        )
+
+        table_state, column_state = state_metric_map[state_metric_option]
+
+
+        selected_state = st.selectbox(
+            "Select State",
+            state_list,
+            key="state_select"
+        )
+        
+        # -----------------------------
+        # STATE QUERY
+        # -----------------------------
         state_query = f"""
-        SELECT year, SUM({column}) AS total_value
-        FROM {table}
-        WHERE state = %s
-        GROUP BY year
-        ORDER BY year
+            SELECT year, SUM({column_state}) AS total_value
+            FROM {table_state}
+            WHERE state = %s
+            GROUP BY year
+            ORDER BY year
         """
 
         state_df = run_query(
-            state_query, params=(normalize_state_name(selected_state),)
+            state_query,
+            params=(normalize_state_name(selected_state),)
         )
 
-        state_df["YoY Growth %"] = state_df["total_value"].pct_change() * 100
+        # -----------------------------
+        # YOY GROWTH
+        # -----------------------------
+        state_df["YoY Growth %"] = (
+            state_df["total_value"].pct_change() * 100
+        ).round(2)
 
+        # -----------------------------
+        # STATE TREND CHART
+        # -----------------------------
         fig_state = px.line(
             state_df,
             x="year",
             y="total_value",
             markers=True,
-            title=f"{metric_choice} Trend - {selected_state}",
+            title=f"{state_metric_option} Trend - {selected_state}",
         )
 
         st.plotly_chart(fig_state, use_container_width=True)
 
         st.dataframe(state_df, use_container_width=True)
 
-    # -----------------------------
+
+    # ===================================================
     # DISTRICT ANALYSIS
-    # -----------------------------
+    # ===================================================
 
     with col_district:
 
-        st.subheader("District Analysis")
+        st.subheader("🏙 District Analysis")
 
+        # -----------------------------
+        # DISTRICT METRIC SELECTOR
+        # -----------------------------
         district_metric_map = {
             "Transaction Value": ("fact_map_transaction", "transaction_amount"),
             "Transaction Count": ("fact_map_transaction", "transaction_count"),
@@ -284,34 +337,56 @@ def show():
 
         table_district, column_district = district_metric_map[district_metric_option]
 
+        # -----------------------------
+        # FETCH DISTRICTS FOR STATE
+        # -----------------------------
         district_query = """
-        SELECT DISTINCT district
-        FROM fact_map_transaction
-        WHERE state = %s
-        ORDER BY district
+            SELECT DISTINCT district
+            FROM fact_map_transaction
+            WHERE state = %s
+            ORDER BY district
         """
 
         districts = run_query(
-            district_query, params=(normalize_state_name(selected_state),)
+            district_query,
+            params=(normalize_state_name(selected_state),)
         )
 
-        selected_district = st.selectbox("Select District", districts["district"])
+        selected_district = st.selectbox(
+            "Select District",
+            districts["district"],
+            key="district_select"
+        )
 
+        # -----------------------------
+        # DISTRICT TREND QUERY
+        # -----------------------------
         growth_query = f"""
-        SELECT year, SUM({column_district}) AS total_value
-        FROM {table_district}
-        WHERE state = %s AND district = %s
-        GROUP BY year
-        ORDER BY year
+            SELECT year, SUM({column_district}) AS total_value
+            FROM {table_district}
+            WHERE state = %s AND district = %s
+            GROUP BY year
+            ORDER BY year
         """
 
         district_df = run_query(
             growth_query,
-            params=(normalize_state_name(selected_state), selected_district),
+            params=(
+                normalize_state_name(selected_state),
+                selected_district
+            ),
         )
 
-        district_df["YoY Growth %"] = district_df["total_value"].pct_change() * 100
+        # -----------------------------
+        # YOY GROWTH
+        # -----------------------------
+        district_df["YoY Growth %"] = (
+            district_df["total_value"].pct_change() * 100
+        ).round(2)
 
+        # -----------------------------
+        # DISTRICT TREND CHART
+        # -----------------------------
         fig_district = px.line(
             district_df,
             x="year",
@@ -323,3 +398,113 @@ def show():
         st.plotly_chart(fig_district, use_container_width=True)
 
         st.dataframe(district_df, use_container_width=True)
+    
+    
+
+    
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+    
+
+    
+    
+    
+
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+    
+
+    
+    
+    
+    
+    
+    
+    
+
+    
+
+    
